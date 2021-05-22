@@ -1,0 +1,269 @@
+etazero(a)=(0.1763578244/(a))
+etaEns(rho)=(0.1763578244*(1.01600/gCS(rho)+0.8000*Vexcl*rho+0.7760000*Vexcl*Vexcl*rho*rho*gCS(rho)))
+ksi(rho)=((1.0*pi/6.0)*rho)
+gCS(rho)=((1.0-0.5*ksi(rho))/(1.0-ksi(rho))**3.0)
+Zhs(rho)=((1.0+ksi(rho)+ksi(rho)**2.0-ksi(rho)**3.0)/(1.0-ksi(rho))**3.0)
+Vexcl=(((2.0/3.0)*pi))
+
+######################################################################
+######################################################################
+I1(m,S)=((4.0/3.0)*lambda(m,S)**2.0+(4.0/75.0)*lambda(m,S)**4.0+(116.0/55125.0)*lambda(m,S)**6.0)
+I2(m,S)=((4.0*log(2.0)+2.0/3.0)*lambda(m,S)**2.0-(20.0/9.0)*lambda(m,S)**3.0+((661727.0/9600.0)-(1468.0/15.0)*log(2.0))*lambda(m,S)**4.0-0.1547*lambda(m,S)**5.0+0.1116*lambda(m,S)**6.0-0.0143*lambda(m,S)**7.0+0.0105*lambda(m,S)**8.0-0.0015*lambda(m,S)**9.0+0.0007*lambda(m,S)**10.0-0.000130*lambda(m,S)**11.0+0.00004*lambda(m,S)**12.0)
+I3(m,S)=(2.901720*lambda(m,S)**2.0-7.0500*lambda(m,S)**3.0+1.04490*lambda(m,S)**4.0+9.48830*lambda(m,S)**5.0-4.35900*lambda(m,S)**6.0)
+I4(m,S)=(-49.14760*lambda(m,S)**2.0+64.76730*lambda(m,S)**3.0+11.07280*lambda(m,S)**4.0-27.15310*lambda(m,S)**5.0-3.9332*lambda(m,S)**6.0+9.1977*lambda(m,S)**7.0-1.2892*lambda(m,S)**8.0)
+######################################################################
+lambda(m,S)=((m**2.0)/(S**2.0))
+m0=0.0000
+m1=(1.01400)
+m2=(1.410)
+m3=(1.730)
+m4=(2.000)
+m6=(2.45590)
+
+
+######################################################################
+f(rho,S,m)=-log((1.0+I1(m,S)*ksi(rho)+(1.0/2.0)*I2(m,S)*ksi(rho)**2.0+(1.0/3.0)*I3(m,S)*ksi(rho)**3.0+(1.0/4.0)*I4(m,S)*ksi(rho)**4.0))
+Zex(rho,S,m)=rho*((f(rho+0.0001,S,m)-f(rho,S,m))/0.0001)
+
+U(rho,S,m)=(1.0/2.0)*m*((f(rho,S,m+0.0001)-f(rho,S,m))/0.0001)
+Z(rho,S,m)=(Zhs(rho)+Zex(rho,S,m))
+g(rho,S,m)=(1.0/(4.0*ksi(rho)))*(Z(rho,S,m)-1.0-U(rho,S,m))
+
+#eta(rho,S,m,a)=etazero(a)*((1.016/g(rho,S,m))+0.8*Vexcl*rho+ 0.776*Vexcl*Vexcl*rho*rho*g(rho,S,m))
+eta(rho,S,m,a)=etazero(a)*Vexcl*rho*((1.016/(Z(rho,S,m)-1.0-U(rho,S,m)))+0.8+0.776*(Z(rho,S,m)-1.0-U(rho,S,m)))
+#########################################################################################
+fiterrorfunction(deta,rho) = deta
+
+set print "fits_ETA.tex"
+fit [0.0:0.8] Z(x,S1,m1) "1.txt" u ($5):($3)/($5):(fiterrorfunction(($4),$5)) via S1 
+print "1 &","\\\\"
+fit [0.0:0.6] Z(x,S3,m3) "3.txt" u ($5):($3)/($5):(fiterrorfunction(($4),$5)) via S3 
+print "1 &","\\\\"
+
+#############################################################
+unset colorbox
+  set border 
+  set border lw 2
+set key samplen 1
+  set ylabel  offset 1.7,0,0
+set tics font ", 14" 
+set key spacing 1.5
+set key left
+     set size 0.4,0.5
+set key top left Left reverse
+set style func linespoints
+set xlabel "x-units" font ",19"
+set ylabel "y-units" font ",17"
+set key spacing 1.5
+set for [i=1:5] linetype i dt i
+set termoption dash
+set xtics 0.1
+set pointsize 1.5
+
+set output "Z_l0.eps"
+set yrange [-0.5:3.0]
+set xrange [0.:0.45]
+set term post enh color eps
+set multiplot
+set ylabel "{PV/Nk_BT}"
+set xlabel "{/Symbol x}^*"
+plot \
+    "0.txt" u ($5)*pi/6.0:($3)*(pi/6.)  title "MD current work"  lt 8 lw 2    lc rgb 'blue',\
+    "0.txt" u ($5)*pi/6.0:($3)*(pi/6.):($4) with yerror notitle lt 8 lw 2    lc rgb 'blue' ,\
+    Z(x*6.0/pi,1.0,m0)*x title "Theory Ref. [14]"  lt -1 lw 4  
+set key bottom right
+plot \
+ "<echo '0 0'" with points ls 0 title "{/Symbol l}=0" 
+unset multiplot
+set output
+#############################################################
+unset colorbox
+  set border 
+  set border lw 2
+  set ylabel  offset 1.7,0,0
+set tics font ", 14" 
+set key spacing 1.5
+set key left
+     set size 0.4,0.5
+set key top left Left reverse
+set style func linespoints
+set xlabel "x-units" font ",19"
+set ylabel "y-units" font ",17"
+set key spacing 1.5
+set for [i=1:5] linetype i dt i
+set termoption dash
+set xtics 0.1
+set pointsize 1.5
+
+set output "Z_l1.eps"
+set yrange [-0.5:3.0]
+set xrange [0.:0.45]
+set term post enh color eps
+set multiplot
+set ylabel "{PV/Nk_BT}"
+set xlabel "{/Symbol x}^*"
+plot \
+    "1.txt" u ($5)*pi/6.0:($3)*(pi/6.)  title "MD current work"  lt 8 lw 2    lc rgb 'blue',\
+    "1.txt" u ($5)*pi/6.0:($3)*(pi/6.):($4) with yerror notitle lt 8  lw 2   lc rgb 'blue' ,\
+"sim_lambda1.0.txt" u ($5)*pi/6.0:($7)*($5)*(pi/6.0)  title "MC Ref. [14]" lt 6 lw 2        lc rgb 'red' ,\
+    Z(x*6.0/pi,1.0,m1)*x title "Theory Ref. [14]"  lt -1 lw 4  
+set key bottom right
+set key font ",19"
+plot \
+ "<echo '0 0'" with points ls 0 title "{/Symbol l}=1" 
+unset multiplot
+set output
+#############################################################
+unset colorbox
+  set border 
+  set border lw 2
+set key font ",14"
+  set ylabel  offset 1.7,0,0
+set tics font ", 14" 
+set key spacing 1.5
+set key left
+     set size 0.4,0.5
+set key top left Left reverse
+set style func linespoints
+set xlabel "x-units" font ",19"
+set ylabel "y-units" font ",17"
+set key spacing 1.5
+set for [i=1:5] linetype i dt i
+set termoption dash
+set xtics 0.1
+set pointsize 1.5
+
+set output "Z_l2.eps"
+set yrange [-0.5:3.0]
+set xrange [0.:0.45]
+set term post enh color eps
+set multiplot
+set ylabel "{PV/Nk_BT}"
+set xlabel "{/Symbol x}^*"
+plot \
+    "2.txt" u ($5)*pi/6.0:($3)*(pi/6.)  title "MD current work"  lt 8 lw 2    lc rgb 'blue',\
+    "2.txt" u ($5)*pi/6.0:($3)*(pi/6.):($4) with yerror notitle lt 8  lw 2   lc rgb 'blue' ,\
+"sim_lambda2.0.txt" u ($5)*pi/6.0:($7)*($5)*(pi/6.0)  title "MC Ref. [14]" lt 6 lw 2        lc rgb 'red' ,\
+    Z(x*6.0/pi,1.0,m2)*x title "Theory Ref. [14]"  lt -1 lw 4  
+set key bottom right
+set key font ",19"
+plot \
+ "<echo '0 0'" with points ls 0 title "{/Symbol l}=2" 
+unset multiplot
+set output
+#############################################################
+unset colorbox
+  set border 
+  set border lw 2
+set key font ",14"
+  set ylabel  offset 1.7,0,0
+set tics font ", 14" 
+set key spacing 1.5
+set key left
+     set size 0.4,0.5
+set key top left Left reverse
+set style func linespoints
+set xlabel "x-units" font ",19"
+set ylabel "y-units" font ",17"
+set key spacing 1.5
+set for [i=1:5] linetype i dt i
+set termoption dash
+set xtics 0.1
+set pointsize 1.5
+
+set output "Z_l3.eps"
+set yrange [-0.5:3.0]
+set xrange [0.:0.45]
+set term post enh color eps
+set multiplot
+set ylabel "{PV/Nk_BT}"
+set xlabel "{/Symbol x}^*"
+plot \
+    "3.txt" u ($5)*pi/6.0:($3)*(pi/6.)  title "MD current work"  lt 8  lw 2   lc rgb 'blue',\
+    "3.txt" u ($5)*pi/6.0:($3)*(pi/6.):($4) with yerror notitle lt 8   lw 2  lc rgb 'blue' ,\
+"sim_lambda3.0.txt" u ($5)*pi/6.0:($7)*($5)*(pi/6.0)  title "MC Ref. [14]" lt 6 lw 2     lc rgb 'red' ,\
+    Z(x*6.0/pi,1.0,m3)*x title "Theory Ref. [14]"  lt -1 lw 4  
+set key bottom right
+set key font ",19"
+plot \
+ "<echo '0 0'" with points ls 0  title "{/Symbol l}=3" 
+unset multiplot
+set output
+
+#############################################################
+unset colorbox
+set key font ",14"
+  set border 
+  set border lw 2
+  set ylabel  offset 1.7,0,0
+set tics font ", 14" 
+set key spacing 1.5
+set key left
+     set size 0.4,0.5
+set key top left Left reverse
+set style func linespoints
+set xlabel "x-units" font ",19"
+set ylabel "y-units" font ",17"
+set key spacing 1.5
+set for [i=1:5] linetype i dt i
+set termoption dash
+set xtics 0.1
+set pointsize 1.5
+
+set output "Z_l4.eps"
+set yrange [-0.5:3.0]
+set xrange [0.:0.45]
+set term post enh color eps
+set multiplot
+set ylabel "{PV/Nk_BT}"
+set xlabel "{/Symbol x}^*"
+plot \
+    "4.txt" u ($5)*pi/6.0:($3)*(pi/6.)  title "MD current work"  lt 8  lw 2   lc rgb 'blue',\
+    "4.txt" u ($5)*pi/6.0:($3)*(pi/6.):($4) with yerror notitle lt 8   lw 2  lc rgb 'blue' ,\
+"sim_lambda4.0.txt" u ($5)*pi/6.0:($7)*($5)*(pi/6.0)  title "MC Ref. [14]" lt 6 lw 2    lc rgb 'red' ,\
+    Z(x*6.0/pi,1.0,m4)*x title "Theory Ref. [14]"  lt -1 lw 4  
+set key bottom right
+set key font ",19"
+plot \
+ "<echo '0 0'" with points ls 0 title "{/Symbol l}=4" 
+unset multiplot
+set output
+
+#############################################################
+unset colorbox
+  set border 
+  set border lw 2
+set key font ",14"
+  set ylabel  offset 1.7,0,0
+set tics font ", 14" 
+set key spacing 1.5
+set key left
+     set size 0.4,0.5
+set key top left Left reverse
+set style func linespoints
+set xlabel "x-units" font ",19"
+set ylabel "y-units" font ",17"
+set key spacing 1.5
+set for [i=1:5] linetype i dt i
+set termoption dash
+set xtics 0.1
+set pointsize 1.5
+
+set output "Z_l6.eps"
+set yrange [-0.5:3.0]
+set xrange [0.:0.45]
+set term post enh color eps
+set multiplot
+set ylabel "{PV/Nk_BT}"
+set xlabel "{/Symbol x}^*"
+plot \
+    "6.txt" u ($5)*pi/6.0:($3)*(pi/6.)  title "MD current work"  lt 8  lw 2   lc rgb 'blue',\
+    "6.txt" u ($5)*pi/6.0:($3)*(pi/6.):($4) with yerror notitle lt 8   lw 2  lc rgb 'blue' ,\
+    Z(x*6.0/pi,1.0,m6)*x title "Theory Ref. [14]"  lt -1 lw 4  
+set key bottom right
+set key font ",19"
+plot \
+ "<echo '0 0'" with points ls 0 title "{/Symbol l}=6" 
+unset multiplot
+set output
+
